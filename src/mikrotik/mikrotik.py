@@ -140,7 +140,7 @@ class MikrotikClient(object):
 
         return dns_entries_parsed
 
-    def upsert_dns_entry(self, address, name):
+    def upsert_static_dns_entry(self, address, name):
         """
         create or update a static dns entry
         :param address: the ip address for the dns entry
