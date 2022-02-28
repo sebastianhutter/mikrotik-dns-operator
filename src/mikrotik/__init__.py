@@ -1,1 +1,1 @@
-from .mikrotik import MikrotikClientException, MikrotikClient
+from .mikrotik import MikrotikClientException, MikrotikClient, MikrotikDnsEntryNotManaged
