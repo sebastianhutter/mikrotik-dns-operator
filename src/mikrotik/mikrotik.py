@@ -95,7 +95,6 @@ class MikrotikClient(object):
             retcode = stdout.channel.recv_exit_status()
             # if stderr or exit status raise an exception
             if retcode != 0:
-                self.client.close()
                 raise MikrotikClientException(f'SSH command "{cli}" returned invalid exit code {retcode}')
 
             retval = stdout.read().decode("utf8")
@@ -112,7 +111,7 @@ class MikrotikClient(object):
             return retlines
 
         except SSHException as e:
-            raise e
+            raise MikrotikClientException(e)
         finally:
             self.client.close()
 
