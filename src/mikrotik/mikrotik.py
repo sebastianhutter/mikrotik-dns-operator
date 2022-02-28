@@ -12,8 +12,8 @@ class MikrotikClientException(Exception):
         self.message = message
 
 class MikrotikDnsEntryNotManaged(Exception):
-    def __init__(self, name, address):
-        self.message = f'Static dns entry with name {name} and address {address} found but not managed by operator'
+    def __init__(self, name):
+        self.message = f'Static dns entry with name {name} found but not managed by operator'
 
 class MikrotikStaticDnsEntry(object):
     def __init__(self, id, address, name, comment, ttl):
@@ -87,6 +87,9 @@ class MikrotikClient(object):
                 pkey=self.private_key,
                 allow_agent=False,
                 look_for_keys=False,
+                timeout=5,
+                auth_timeout=5,
+                banner_timeout=5,
                 # disable strong pub keys algorithms for mikrotik pkey authentication
                 disabled_algorithms={'pubkeys': ['rsa-sha2-512', 'rsa-sha2-256']}
             )
@@ -100,24 +103,32 @@ class MikrotikClient(object):
             retval = stdout.read().decode("utf8")
             # parse output for potential error messages
             if 'bad command' in retval:
+                stdout.close()
+                self.client.close()
                 raise MikrotikClientException(retval)
             if 'invalid value for argument' in retval:
+                stdout.close()
+                self.client.close()
                 raise MikrotikClientException(retval)
 
             retlines = []
-            for l in retval.split('\r\n'):
+            for l in retval.split('\n'):
                 if not l.startswith('#') and len(l) > 0:
-                    retlines.append(l)
+                    retlines.append(l.strip())
+            stdout.close()
+            self.client.close()
             return retlines
 
         except SSHException as e:
             raise MikrotikClientException(e)
-        finally:
-            self.client.close()
+
 
     def get_static_dns_entries(self):
         """
-        return all static dns entries
+        return all static dns entries.
+        this function isnt used anymore as async calls to mikrotik means that
+        the returned ids may change during execution.
+        i keep it in the code for a reference for parsing
         :return: list of static dns entries
         """
 
@@ -147,19 +158,41 @@ class MikrotikClient(object):
         :return: None
         """
 
-        # first get a list of all dns entries
-        static_dns_entries = self.get_static_dns_entries()
+        # try to retrieve the static dns entries comment
+        existing_entry_comment=self.cli(f':put [/ip dns static get [/ip dns static find name="{name}"] comment]')[0]
+        # if the return value is 'no such item' the item doesnt exist yet and needs
+        # to be created. else we compare the returned comment with the expected one
+        # to update it
+        if existing_entry_comment == 'no such item':
+            logging.debug(f'Create dns entry {name} with address {address}')
+            self.cli(f'/ip dns static add name={name} address={address} comment={self.comment} ttl={self.ttl}')
+            return
 
-        # check if the given name already exists
-        for d in static_dns_entries:
-            if d.name == name and d.address != address and d.ttl != self.ttl:
-                if d.comment != self.comment:
-                    raise MikrotikDnsEntryNotManaged(address=d.address, name=d.name)
+        if existing_entry_comment == self.comment:
+            logging.debug(f'Update dns entry {name} with address {address}')
+            self.cli(f'/ip dns static set [/ip dns static find name="{name}"] address={address} ttl={self.ttl}')
+            return
 
-                logging.debug(f'Update dns entry {name} with address {address}')
-                self.cli(f'/ip dns static set {d.id} address={address} ttl={self.ttl}')
-                return
+        raise MikrotikDnsEntryNotManaged(name=name)
 
-        # if dns enty wasnt found lets create it
-        logging.debug(f'Create dns entry {name} with address {address}')
-        self.cli(f'/ip dns static add name={name} address={address} comment={self.comment} ttl={self.ttl}')
+
+    def delete_static_dns_entry(self, name):
+        """
+        delete static dns entry
+        :param name:
+        :return:
+        """
+
+        # try to retrieve the static dns entries comment
+        # if the entry doesnt exist there is nothing to do for us
+        existing_entry_comment = self.cli(f':put [/ip dns static get [/ip dns static find name="{name}"] comment]')[0]
+
+        if existing_entry_comment == 'no such item':
+            return
+
+        if existing_entry_comment == self.comment:
+            logging.debug(f'Delete dns entry {name}')
+            self.cli(f'/ip dns static remove [/ip dns static find name="{name}"]')
+            return
+
+        raise MikrotikDnsEntryNotManaged(name=name)
