@@ -192,7 +192,16 @@ class MikrotikClient(object):
 
         if existing_entry_comment == self.comment:
             logging.debug(f'Delete dns entry {name}')
-            self.cli(f'/ip dns static remove [/ip dns static find name="{name}"]')
+            # we redo the deletion of the entry until it for sure is removed.
+            # when the router is hit multiple times it can happen that the entry isnt
+            # removed even if it should be
+            loop = 0
+            while self.cli(f':put [/ip dns static get [/ip dns static find name="{name}"] comment]')[0] != 'no such item':
+                if loop >= 10:
+                    raise MikrotikClientException(message=f'Unable to delete dns entry for {name}')
+                self.cli(f'/ip dns static remove [/ip dns static find name="{name}"]')
+                loop += 1
+                time.sleep(3)
             return
 
         raise MikrotikDnsEntryNotManaged(name=name)
