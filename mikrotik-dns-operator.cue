@@ -18,6 +18,12 @@ dagger.#Plan & {
 	}
 
 	actions: {
+		params: {
+		  image: {
+			  ref: string | *"sebastianhutter/miktrotik-dns-operator"
+			  tag: string | *"latest"
+		  }
+		}
 		test: {
 			deps: docker.#Build & {
 			  steps: [
@@ -62,12 +68,12 @@ dagger.#Plan & {
 			source: client.filesystem."./".read.contents
 		}
 		push: docker.#Push & {
-			image: build.output
-			dest: "sebastianhutter/miktrotik-dns-operator"
-			auth: {
-				username: client.env.REGISTRY_USER
-				secret: client.env.REGISTRY_TOKEN
-			}
-		}
-	}
+		  image: build.output
+		  dest: "\(params.image.ref):\(params.image.tag)"
+		  auth: {
+			  username: client.env.REGISTRY_USER
+		    secret: client.env.REGISTRY_TOKEN
+      }
+    }
+ 	}
 }
