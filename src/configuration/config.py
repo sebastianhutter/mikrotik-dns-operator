@@ -6,13 +6,13 @@ class Config(object):
         simple configuration class
     """
 
-    def __init__(self, load_dotenv=True):
+    def __init__(self, load_env_from_file=True):
         """
             initialize the operator configuration from environment variables
         """
 
-        if load_dotenv:
-            load_dotenv('.env', )
+        if load_env_from_file:
+            load_dotenv('.env')
             load_dotenv('../.env')
 
         self.mikrotik_host = os.getenv('MIKROTIK_HOST')

@@ -17,12 +17,12 @@ class TestConfig(object):
         for e in env:
             os.environ.pop(e)
         with pytest.raises(ValueError, match=exception):
-            c = Config(load_dotenv=False)
+            c = Config(load_env_from_file=False)
 
 
     def test_succeed_with_valid_environment(self):
         self._setup_complete_environment()
-        c = Config(load_dotenv=False)
+        c = Config(load_env_from_file=False)
 
         assert c.mikrotik_host == '127.0.0.1'
         assert c.mikrotik_ssh_port == '22'
