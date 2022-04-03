@@ -1,0 +1,33 @@
+---
+# service pointing into nirvana
+# required for test ingress definitions
+apiVersion: v1
+kind: Service
+metadata:
+  name: mikrotik-dns-operator-test-single-host
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: mikrotik-dns-operator-test-single-host
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mikrotik-dns-operator-test-single-host
+  annotations:
+    tooling.hutter.cloud/mikrotik-static-ip: 192.168.1.1
+spec:
+  rules:
+  - host: mikrotik-dns-operator-test-single-host.hutter.cloud
+    http:
+      paths:
+      - backend:
+          service:
+            name: mikrotik-dns-operator-test-single-host
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
