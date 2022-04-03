@@ -1,5 +1,6 @@
 import logging
 import tempfile
+import time
 
 from paramiko import SSHClient, RSAKey, SSHException
 from paramiko.py3compat import decodebytes
@@ -7,13 +8,41 @@ import base64
 import re
 
 
+def connect_to_mikrotik(host, port, host_key, username, password, private_key, passphrase, comment, ttl):
+    """
+    connect to the mikrotik firewall with the given credentials
+
+    :return: instance of MikrotikClient
+    """
+
+    try:
+        # initialize mikrotik client
+        return MikrotikClient(
+            host=host,
+            port=port,
+            host_key=host_key,
+            username=username,
+            password=password,
+            private_key=private_key,
+            passphrase=passphrase,
+            comment=comment,
+            ttl=ttl,
+        )
+    except MikrotikClientException as e:
+        raise e
+
+
+
+
 class MikrotikClientException(Exception):
     def __init__(self, message):
         self.message = message
 
+
 class MikrotikDnsEntryNotManaged(Exception):
     def __init__(self, name):
         self.message = f'Static dns entry with name {name} found but not managed by operator'
+
 
 class MikrotikStaticDnsEntry(object):
     def __init__(self, id, address, name, comment, ttl):
@@ -22,6 +51,7 @@ class MikrotikStaticDnsEntry(object):
         self.name = name
         self.comment = comment
         self.ttl = ttl
+
 
 class MikrotikClient(object):
 
@@ -158,7 +188,7 @@ class MikrotikClient(object):
         """
 
         # try to retrieve the static dns entries comment
-        existing_entry_comment=self.cli(f':put [/ip dns static get [/ip dns static find name="{name}"] comment]')[0]
+        existing_entry_comment = self.cli(f':put [/ip dns static get [/ip dns static find name="{name}"] comment]')[0]
         # if the return value is 'no such item' the item doesnt exist yet and needs
         # to be created. else we compare the returned comment with the expected one
         # to update it
@@ -173,7 +203,6 @@ class MikrotikClient(object):
             return
 
         raise MikrotikDnsEntryNotManaged(name=name)
-
 
     def delete_static_dns_entry(self, name):
         """
