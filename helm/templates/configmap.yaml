@@ -1,0 +1,10 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "mikrotik-dns-operator.configMapName" . }}
+  labels:
+    {{- include "mikrotik-dns-operator.labels" . | nindent 4 }}
+data:
+  MIKROTIK_HOST: {{ .Values.mikrotik.host | quote }}
+  MIKROTIK_SSH_PORT: {{ default "22" .Values.mikrotik.port | quote }}
+  MIKROTIK_SSH_HOST_KEY: {{ .Values.mikrotik.hostKey | quote }}

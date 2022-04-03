@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mikrotik-dns-operator
+description: Install the mikrotik dns operator which handles static dns entries in your mikrotik router for ingress definitions.
+type: application
+version: 0.1.0
+appVersion: "latest"

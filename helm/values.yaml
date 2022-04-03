@@ -1,0 +1,77 @@
+# Default values for mikrotik-dns-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# mikrotik configuration
+mikrotik:
+  # the ip address or hostname of the mikrotik router
+  host: 127.0.0.1
+  # the ssh port
+  port: 22
+  # the ssh host key of the mikrotik router without leading ssh-rsa
+  # something like e.g. "AAAAB3N...sJfsxcZfPQ=="
+  hostKey: "AA=="
+  # specify existing secret name to use existing secret for login credentials
+  # if secretName is specified the helm chart won't create the secret with the given values
+  secretName: ""
+  credentials:
+    # define login credentials for the mikrotik router
+    # if private key and password are specified the private key is used, a passphrase for the private key is
+    # optional
+    username: "admin"
+    password: ""
+    # base64 encoded private key for ssh connection
+    privateKey: ""
+    # optional passphrase for the private key
+    passphrase: ""
+
+
+image:
+  repository: sebastianhutter/miktrotik-dns-operator
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
