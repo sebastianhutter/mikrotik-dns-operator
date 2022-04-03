@@ -122,33 +122,32 @@ class MikrotikClient(object):
         except SSHException as e:
             raise MikrotikClientException(e)
 
-
-    def get_static_dns_entries(self):
-        """
-        return all static dns entries.
-        this function isnt used anymore as async calls to mikrotik means that
-        the returned ids may change during execution.
-        i keep it in the code for a reference for parsing
-        :return: list of static dns entries
-        """
-
-        dns_entries_raw = self.cli('/ip dns static print terse')
-        dns_entries_parsed = []
-        for d in dns_entries_raw:
-            entry = re.search(r'^\s?(?P<id>\d{1,2})\s+(comment=(?P<comment>.*?) )?name=(?P<name>.*?) address=(?P<address>.*?) ttl=(?P<ttl>.*?)$', d)
-            if entry:
-                dns_entries_parsed.append(
-                    MikrotikStaticDnsEntry(
-                        id=entry.group('id'),
-                        address=entry.group('address'),
-                        name=entry.group('name'),
-                        comment=entry.group('comment'),
-                        ttl=entry.group('ttl')
-                    )
-                )
-
-
-        return dns_entries_parsed
+    # def get_static_dns_entries(self):
+    #     """
+    #     return all static dns entries.
+    #     this function isnt used anymore as async calls to mikrotik means that
+    #     the returned ids may change during execution.
+    #     i keep it in the code for a reference for parsing
+    #     :return: list of static dns entries
+    #     """
+    #
+    #     dns_entries_raw = self.cli('/ip dns static print terse')
+    #     dns_entries_parsed = []
+    #     for d in dns_entries_raw:
+    #         entry = re.search(r'^\s?(?P<id>\d{1,2})\s+(comment=(?P<comment>.*?) )?name=(?P<name>.*?) address=(?P<address>.*?) ttl=(?P<ttl>.*?)$', d)
+    #         if entry:
+    #             dns_entries_parsed.append(
+    #                 MikrotikStaticDnsEntry(
+    #                     id=entry.group('id'),
+    #                     address=entry.group('address'),
+    #                     name=entry.group('name'),
+    #                     comment=entry.group('comment'),
+    #                     ttl=entry.group('ttl')
+    #                 )
+    #             )
+    #
+    #
+    #     return dns_entries_parsed
 
     def upsert_static_dns_entry(self, address, name):
         """
