@@ -11,6 +11,10 @@ dagger.#Plan & {
 			"./": read: contents: dagger.#FS
 		}
 		network: "unix:///var/run/docker.sock": connect: dagger.#Socket
+		env: {
+			REGISTRY_USER: string
+			REGISTRY_TOKEN: dagger.#Secret
+		}
 	}
 
 	actions: {
@@ -60,6 +64,10 @@ dagger.#Plan & {
 		push: docker.#Push & {
 			image: build.output
 			dest: "sebastianhutter/miktrotik-dns-operator"
+			auth: {
+				username: client.env.REGISTRY_USER
+				secret: client.env.REGISTRY_TOKEN
+			}
 		}
 	}
 }
